@@ -1,8 +1,10 @@
-let a = fetch("http://localhost:3000/api/products") // Get API's datas
+// API's request
+let a = fetch("http://localhost:3000/api/products")
   .then((res) => res.json())
   .then((data) => {
     console.log(data);
 
+    // Get API's datas
     let display = "";
     for (let article of data) {
       display += `
@@ -21,4 +23,4 @@ let a = fetch("http://localhost:3000/api/products") // Get API's datas
 
   .catch((err) => console.log("Une erreur est survenue"));
 
-  console.log(a);
+console.log(a);
