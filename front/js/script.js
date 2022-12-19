@@ -1,12 +1,12 @@
 // API's request
-let a = fetch("http://localhost:3000/api/products")
+fetch("http://localhost:3000/api/products")
   .then((res) => res.json())
-  .then((data) => {
-    console.log(data);
+  .then((datas) => {
+    console.log(datas);
 
     // Get API's datas
     let display = "";
-    for (let article of data) {
+    datas.forEach((article) => {
       display += `
         <a href="./product.html?id=${article._id}">
             <article>
@@ -16,11 +16,10 @@ let a = fetch("http://localhost:3000/api/products")
             </article>
           </a>
           `;
-    }
-    console.log(display);
-    document.querySelector("#items").innerHTML = display;
+    });
+    document.getElementById("items").innerHTML = display;
   })
 
-  .catch((err) => console.log("Une erreur est survenue"));
-
-console.log(a);
+.catch((err) => {
+  document.getElementById("items").innerHTML = "Une erreur est survenue(${err})";
+ });

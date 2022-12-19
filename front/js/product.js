@@ -9,15 +9,19 @@ fetch(`http://localhost:3000/api/products/${productId}`)
   .then((productInformation) => {
     console.log(productInformation);
 
-    // Implementing product datas
-    let itemImg = "";
-    for (let article of productInformation) {
-      itemImg = `
-      <img src="${article.imageUrl}" alt="${article.altTxt}"> `;
-    }
-
-    console.log(itemImg);
-    document.querySelector(".item_img").innerHTML = productInformation;
+    //image
+    document.querySelector(
+      ".item__img"
+    ).innerHTML = `<img src="${productInformation.imageUrl}" alt="${productInformation.altTxt}"> `;
+    //Name
+    document.getElementById("title").innerHTML = `${productInformation.name}`;
+    //Price
+    document.getElementById("price").innerHTML = `${productInformation.price}`;
+    //Description
+    document.getElementById("description").innerHTML = `${productInformation.description}`;
   })
 
-  .catch((err) => console.log("Une erreur est survenue"));
+  .catch((err) => {
+    document.getElementById("items").innerHTML =
+      "Une erreur est survenue(${err})";
+  });
