@@ -18,10 +18,32 @@ fetch(`http://localhost:3000/api/products/${productId}`)
     //Price
     document.getElementById("price").innerHTML = `${productInformation.price}`;
     //Description
-    document.getElementById("description").innerHTML = `${productInformation.description}`;
+    document.getElementById(
+      "description"
+    ).innerHTML = `${productInformation.description}`;
+    //Colors
+    let optionColors = productInformation.colors;
+    optionColors.forEach((element) => {
+      let color = document.createElement("option");
+      color.value = element;
+      color.innerText = element;
+      document.getElementById("colors").appendChild(color);
+    });
+    //Page's title
+    document.getElementsByTagName(
+      title
+    ).innerHTML = `${productInformation.name}`;
+
+    /*let optionColors = productInformation.colors;
+    let item_colors = document.getElementById("colors");
+    optionColors.forEach(function(element, key){
+        item_colors[key] = new Option(element,);
+    })
+    console.log(optionColors)*/
   })
 
   .catch((err) => {
-    document.getElementById("items").innerHTML =
-      "Une erreur est survenue(${err})";
+    document
+      .getElementById("items")
+      .insertAdjacentHTML("beforebegin", "Une erreur est survenue(${err})");
   });
