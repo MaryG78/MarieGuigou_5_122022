@@ -21,6 +21,10 @@ fetch(`http://localhost:3000/api/products/${productId}`)
     document.getElementById(
       "description"
     ).innerHTML = `${productInformation.description}`;
+    //Page's title
+    document.getElementsByTagName(
+      "title"
+    ).textContent = `${productInformation.name}`;
     //Colors
     let optionColors = productInformation.colors;
     optionColors.forEach((element) => {
@@ -29,10 +33,6 @@ fetch(`http://localhost:3000/api/products/${productId}`)
       color.innerText = element;
       document.getElementById("colors").appendChild(color);
     });
-    //Page's title
-    document.getElementsByTagName(
-      title
-    ).innerHTML = `${productInformation.name}`;
 
     /*let optionColors = productInformation.colors;
     let item_colors = document.getElementById("colors");
@@ -40,6 +40,58 @@ fetch(`http://localhost:3000/api/products/${productId}`)
         item_colors[key] = new Option(element,);
     })
     console.log(optionColors)*/
+
+    // LOCAL STORAGE
+    // Recovery of form datas onclick
+    document.querySelector("#addToCart").addEventListener("click", function () {
+      let quantityStorage = document.getElementById("quantity").value;
+      let colorsStorage = document.getElementById("colors").value;
+
+      let LocalStorageDatas = {
+        idKanapStorage: productId,
+        colorsKanapStorage: colorsStorage,
+        quantityKanapStorage: quantityStorage,
+      };
+      if (
+        colorsStorage == null ||
+        colorsStorage === "" ||
+        quantityStorage == 0
+      ) {
+        alert("Please select a color and a quantity");
+        return;
+      }
+      // Get a product from the local storage
+      let productStorage = JSON.parse(localStorage.getItem("productBasket"));
+      // Add a product in the local storage
+      let addProductLocalStorage = () => {
+        productStorage.push(LocalStorageDatas);
+        localStorage.setItem("productBasket", JSON.stringify(productStorage));
+      };
+      //confirmation window
+      let popupConfirmation = () => {
+        if (
+          window.confirm(
+            `${productInformation.name} a été ajouté au panier. Consulter le panier OK ou revenir à l'accueil ANNULER`
+          )
+        ) {
+          window.location.assign("cart.html");
+        } else {
+          window.location.assign("index.html");
+        }
+      };
+
+      // if their is a product in local storage, push it in json format
+      if (productStorage) {
+        addProductLocalStorage();
+        popupConfirmation();
+      }
+      // if their's no product in local storage, create an array and push it
+      else {
+        productStorage = [];
+        addProductLocalStorage();
+        popupConfirmation();
+      }
+    });
   })
 
   .catch((err) => {
