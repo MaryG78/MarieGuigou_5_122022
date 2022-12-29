@@ -9,23 +9,22 @@ fetch(`http://localhost:3000/api/products/${productId}`)
   .then((productInformation) => {
     console.log(productInformation);
 
-    //image
+    //display image
     document.querySelector(
       ".item__img"
     ).innerHTML = `<img src="${productInformation.imageUrl}" alt="${productInformation.altTxt}"> `;
-    //Name
+    //display name
     document.getElementById("title").innerHTML = `${productInformation.name}`;
-    //Price
+    // display price
     document.getElementById("price").innerHTML = `${productInformation.price}`;
-    //Description
+    //display description
     document.getElementById(
       "description"
     ).innerHTML = `${productInformation.description}`;
-    //Page's title
-    document.getElementsByTagName(
-      "title"
-    ).textContent = `${productInformation.name}`;
-    //Colors
+    //display Page's title
+    let title = document.querySelector("title");
+    title.innerText = `${productInformation.name}`;
+    //display colors
     let optionColors = productInformation.colors;
     optionColors.forEach((element) => {
       let color = document.createElement("option");
@@ -34,24 +33,18 @@ fetch(`http://localhost:3000/api/products/${productId}`)
       document.getElementById("colors").appendChild(color);
     });
 
-    /*let optionColors = productInformation.colors;
-    let item_colors = document.getElementById("colors");
-    optionColors.forEach(function(element, key){
-        item_colors[key] = new Option(element,);
-    })
-    console.log(optionColors)*/
-
-    // LOCAL STORAGE
     // Recovery of form datas onclick
     document.querySelector("#addToCart").addEventListener("click", function () {
-      let quantityStorage = document.getElementById("quantity").value;
-      let colorsStorage = document.getElementById("colors").value;
+      let quantityStorage = parseInt(document.getElementById("quantity").value); // Get the selected quantity
+      let colorsStorage = document.getElementById("colors").value; // Get the selected color
 
-      let LocalStorageDatas = {
+      // Creating new product
+      let productOptions = {
         idKanapStorage: productId,
         colorsKanapStorage: colorsStorage,
         quantityKanapStorage: quantityStorage,
       };
+      //error message if quantity or color is missing
       if (
         colorsStorage == null ||
         colorsStorage === "" ||
@@ -60,14 +53,8 @@ fetch(`http://localhost:3000/api/products/${productId}`)
         alert("Please select a color and a quantity");
         return;
       }
-      // Get a product from the local storage
-      let productStorage = JSON.parse(localStorage.getItem("productBasket"));
-      // Add a product in the local storage
-      let addProductLocalStorage = () => {
-        productStorage.push(LocalStorageDatas);
-        localStorage.setItem("productBasket", JSON.stringify(productStorage));
-      };
-      //confirmation window
+
+      //add to cart confirmation window 
       let popupConfirmation = () => {
         if (
           window.confirm(
@@ -79,21 +66,37 @@ fetch(`http://localhost:3000/api/products/${productId}`)
           window.location.assign("index.html");
         }
       };
+      /*ENREGISTRER LES CLES ET VALEURS DU LOCAL STORAGE
+       *Envoie les produits dans le tableau productInLocalStorage puis enregistre dans le localStorage
+       *Recherche si un produit est déjà présent
+       *Si un produit est déjà présent seule la quantité est mise à jour
+       */
+      let productInLocalStorage = JSON.parse(localStorage.getItem("Canape"));
+      if (productInLocalStorage == null) {
+        productInLocalStorage = [];
+        productInLocalStorage.push(productOptions);
+        localStorage.setItem("Canape", JSON.stringify(productInLocalStorage));
+        popupConfirmation();
+      } else {
+        const duplicatedItems = productInLocalStorage.find(
+          (element) =>
+            element.idKanapStorage == productOptions.idKanapStorage &&
+            element.colorsKanapStorage == productOptions.colorsKanapStorage
+        );
 
-      // if their is a product in local storage, push it in json format
-      if (productStorage) {
-        addProductLocalStorage();
-        popupConfirmation();
-      }
-      // if their's no product in local storage, create an array and push it
-      else {
-        productStorage = [];
-        addProductLocalStorage();
-        popupConfirmation();
+        if (duplicatedItems == undefined) {
+          productInLocalStorage.push(productOptions);
+          localStorage.setItem("Canape", JSON.stringify(productInLocalStorage));
+          popupConfirmation();
+        } else {
+          duplicatedItems.quantityKanapStorage +=
+            productOptions.quantityKanapStorage;
+          localStorage.setItem("Canape", JSON.stringify(productInLocalStorage));
+          popupConfirmation();
+        }
       }
     });
   })
-
   .catch((err) => {
     document
       .getElementById("items")
