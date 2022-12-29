@@ -1,6 +1,8 @@
 // API's request
 fetch("http://localhost:3000/api/products")
+  // If the request is successfull, returning the response in a JSON format
   .then((res) => res.json())
+  // defining API's response as datas and sending action tu be executed
   .then((datas) => {
     console.log(datas);
 
@@ -20,6 +22,7 @@ fetch("http://localhost:3000/api/products")
     document.getElementById("items").innerHTML = display;
   })
 
-.catch((err) => {
-  document.getElementById("items").innerHTML = "Une erreur est survenue(${err})";
- });
+  .catch((err) => {
+    document.getElementById("items").innerHTML =
+      "Une erreur est survenue(${err})";
+  });
