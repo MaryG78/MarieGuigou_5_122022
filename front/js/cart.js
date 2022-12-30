@@ -1,20 +1,19 @@
-// Get a product from the local storage
-let productStorage = JSON.parse(localStorage.getItem("productBasket"));
-console.log(productStorage);
+const cart= JSON.parse(localStorage.getItem("Canape"));
 
-// classe où injecter le code HTML
-const basketHTMLClass = document.getElementById("cart__items");
+//empty and full cart management
 
-// si le panier est vide
-if (productStorage === null) {
-const panierVide = ``;
-// si le panier n'est pas vide
-} else {
-let basketArray = [];
-for(i = 0; i < productStorage.length; i++){
-   basketArray = basketArray + `
-   `
+if (cart == null || cart.length == 0) {
+  document.getElementById("cart__title").innerHTML += `Votre panier est vide`;
 }
 
+function fetchProductsInCart() {
+  for (const element of cart) {
+    fetch("http://localhost:3000/api/products/" + cart.idKanapStorage)
+      .then((response) => response.json())
+      .then((product) => (productInCart) => {
+        console.log(product);
+      });
+  }
 }
+fetchProductsInCart();
 

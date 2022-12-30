@@ -54,7 +54,7 @@ fetch(`http://localhost:3000/api/products/${productId}`)
         return;
       }
 
-      //add to cart confirmation window 
+      //add to cart confirmation window
       let popupConfirmation = () => {
         if (
           window.confirm(
@@ -66,10 +66,10 @@ fetch(`http://localhost:3000/api/products/${productId}`)
           window.location.assign("index.html");
         }
       };
-      /*ENREGISTRER LES CLES ET VALEURS DU LOCAL STORAGE
-       *Envoie les produits dans le tableau productInLocalStorage puis enregistre dans le localStorage
-       *Recherche si un produit est déjà présent
-       *Si un produit est déjà présent seule la quantité est mise à jour
+      /*SAVE KEYS AND VALUES OF THE LOCAL STORAGE
+       *Send products in the productInLocalStorage array then save in the localStorage
+       *Search if a product is already present
+       *If a product is already present only the quantity is updated
        */
       let productInLocalStorage = JSON.parse(localStorage.getItem("Canape"));
       if (productInLocalStorage == null) {
