@@ -4,7 +4,6 @@ fetch("http://localhost:3000/api/products")
   .then((res) => res.json())
   // defining API's response as datas and sending action tu be executed
   .then((datas) => {
-    console.log(datas);
 
     // Get API's datas
     let display = "";

@@ -7,23 +7,20 @@ const productId = urlParams.get("id");
 fetch(`http://localhost:3000/api/products/${productId}`)
   .then((response) => response.json())
   .then((productInformation) => {
-    console.log(productInformation);
-
     //display image
     document.querySelector(
       ".item__img"
     ).innerHTML = `<img src="${productInformation.imageUrl}" alt="${productInformation.altTxt}"> `;
     //display name
-    document.getElementById("title").innerHTML = `${productInformation.name}`;
+    document.getElementById("title").innerHTML = productInformation.name;
     // display price
-    document.getElementById("price").innerHTML = `${productInformation.price}`;
+    document.getElementById("price").innerHTML = productInformation.price;
     //display description
-    document.getElementById(
-      "description"
-    ).innerHTML = `${productInformation.description}`;
+    document.getElementById("description").innerHTML =
+      productInformation.description;
     //display Page's title
     let title = document.querySelector("title");
-    title.innerText = `${productInformation.name}`;
+    title.innerText = productInformation.name;
     //display colors
     let optionColors = productInformation.colors;
     optionColors.forEach((element) => {
@@ -38,32 +35,24 @@ fetch(`http://localhost:3000/api/products/${productId}`)
       let quantityStorage = parseInt(document.getElementById("quantity").value); // Get the selected quantity
       let colorsStorage = document.getElementById("colors").value; // Get the selected color
 
+      setErrors(quantityStorage, colorsStorage);
+
       // Creating new product
       let productOptions = {
-        idKanapStorage: productId,
-        colorsKanapStorage: colorsStorage,
-        quantityKanapStorage: quantityStorage,
+        _id: productId,
+        colors: colorsStorage,
+        quantity: quantityStorage,
       };
-      //error message if quantity or color is missing
-      if (
-        colorsStorage == null ||
-        colorsStorage === "" ||
-        quantityStorage == 0
-      ) {
-        alert("Please select a color and a quantity");
-        return;
-      }
 
       //add to cart confirmation window
       let popupConfirmation = () => {
         if (
-          window.confirm(
-            `${productInformation.name} a été ajouté au panier. Consulter le panier OK ou revenir à l'accueil ANNULER`
-          )
+          quantityStorage > 0 &&
+          quantityStorage <= 100 &&
+          colorsStorage !== null &&
+          colorsStorage !== ""
         ) {
-          window.location.assign("cart.html");
-        } else {
-          window.location.assign("index.html");
+          window.confirm(`${productInformation.name} a été ajouté au panier.`);
         }
       };
       /*SAVE KEYS AND VALUES OF THE LOCAL STORAGE
@@ -80,8 +69,8 @@ fetch(`http://localhost:3000/api/products/${productId}`)
       } else {
         const duplicatedItems = productInLocalStorage.find(
           (element) =>
-            element.idKanapStorage == productOptions.idKanapStorage &&
-            element.colorsKanapStorage == productOptions.colorsKanapStorage
+            element._id == productOptions._id &&
+            element.colors == productOptions.colors
         );
 
         if (duplicatedItems == undefined) {
@@ -89,8 +78,7 @@ fetch(`http://localhost:3000/api/products/${productId}`)
           localStorage.setItem("Canape", JSON.stringify(productInLocalStorage));
           popupConfirmation();
         } else {
-          duplicatedItems.quantityKanapStorage +=
-            productOptions.quantityKanapStorage;
+          duplicatedItems.quantity += productOptions.quantity;
           localStorage.setItem("Canape", JSON.stringify(productInLocalStorage));
           popupConfirmation();
         }
@@ -102,3 +90,16 @@ fetch(`http://localhost:3000/api/products/${productId}`)
       .getElementById("items")
       .insertAdjacentHTML("beforebegin", "Une erreur est survenue(${err})");
   });
+
+let setErrors = (quantityStorage, colorsStorage) => {
+  //error message if quantity is missing
+  if (quantityStorage == 0 || quantityStorage > 100) {
+    alert("Please select a quantity between 1 and 100");
+    return;
+  }
+  //error message if color is missing
+  if (colorsStorage == null || colorsStorage === "") {
+    alert("Please select a color");
+    return;
+  }
+};
