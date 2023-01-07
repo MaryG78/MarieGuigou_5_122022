@@ -29,15 +29,18 @@ fetch(`http://localhost:3000/api/products/${productId}`)
       color.innerText = element;
       document.getElementById("colors").appendChild(color);
     });
-
+document.querySelector("#addToCart").addEventListener("click", function ()
     // Recovery of form datas onclick
-    document.querySelector("#addToCart").addEventListener("click", function () {
+     {
       let quantityStorage = parseInt(document.getElementById("quantity").value); // Get the selected quantity
       let colorsStorage = document.getElementById("colors").value; // Get the selected color
 
-      setErrors(quantityStorage, colorsStorage);
+      let isErrors = setErrors(quantityStorage, colorsStorage);
+      if (isErrors) {
+        return;
+      } // If the quantity or color is wrong => not added to the local storage
 
-      // Creating new product
+      // Creating options of new product on local storage
       let productOptions = {
         _id: productId,
         colors: colorsStorage,
@@ -52,7 +55,9 @@ fetch(`http://localhost:3000/api/products/${productId}`)
           colorsStorage !== null &&
           colorsStorage !== ""
         ) {
-          window.confirm(`${productInformation.name} a été ajouté au panier.`);
+          const p = document.getElementsByClassName("item__content__addButton")[0];
+          p.insertAdjacentHTML("afterend", `${productInformation.name} a été ajouté au panier.`
+          );
         }
       };
       /*SAVE KEYS AND VALUES OF THE LOCAL STORAGE
@@ -88,18 +93,18 @@ fetch(`http://localhost:3000/api/products/${productId}`)
   .catch((err) => {
     document
       .getElementById("items")
-      .insertAdjacentHTML("beforebegin", "Une erreur est survenue(${err})");
+      .insertAdjacentHTML("beforebegin", `Une erreur est survenue(${err})`);
   });
 
 let setErrors = (quantityStorage, colorsStorage) => {
   //error message if quantity is missing
   if (quantityStorage == 0 || quantityStorage > 100) {
     alert("Please select a quantity between 1 and 100");
-    return;
+    return true;
   }
   //error message if color is missing
   if (colorsStorage == null || colorsStorage === "") {
     alert("Please select a color");
-    return;
+    return true;
   }
 };

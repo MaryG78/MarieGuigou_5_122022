@@ -22,6 +22,7 @@ fetch("http://localhost:3000/api/products")
   })
 
   .catch((err) => {
-    document.getElementById("items").innerHTML =
-      "Une erreur est survenue(${err})";
+    document.getElementById(
+      "items"
+    ).innerHTML = `Une erreur est survenue(${err})`;
   });
