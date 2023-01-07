@@ -7,88 +7,8 @@ const productId = urlParams.get("id");
 fetch(`http://localhost:3000/api/products/${productId}`)
   .then((response) => response.json())
   .then((productInformation) => {
-    //display image
-    document.querySelector(
-      ".item__img"
-    ).innerHTML = `<img src="${productInformation.imageUrl}" alt="${productInformation.altTxt}"> `;
-    //display name
-    document.getElementById("title").innerHTML = productInformation.name;
-    // display price
-    document.getElementById("price").innerHTML = productInformation.price;
-    //display description
-    document.getElementById("description").innerHTML =
-      productInformation.description;
-    //display Page's title
-    let title = document.querySelector("title");
-    title.innerText = productInformation.name;
-    //display colors
-    let optionColors = productInformation.colors;
-    optionColors.forEach((element) => {
-      let color = document.createElement("option");
-      color.value = element;
-      color.innerText = element;
-      document.getElementById("colors").appendChild(color);
-    });
-document.querySelector("#addToCart").addEventListener("click", function ()
-    // Recovery of form datas onclick
-     {
-      let quantityStorage = parseInt(document.getElementById("quantity").value); // Get the selected quantity
-      let colorsStorage = document.getElementById("colors").value; // Get the selected color
-
-      let isErrors = setErrors(quantityStorage, colorsStorage);
-      if (isErrors) {
-        return;
-      } // If the quantity or color is wrong => not added to the local storage
-
-      // Creating options of new product on local storage
-      let productOptions = {
-        _id: productId,
-        colors: colorsStorage,
-        quantity: quantityStorage,
-      };
-
-      //add to cart confirmation window
-      let popupConfirmation = () => {
-        if (
-          quantityStorage > 0 &&
-          quantityStorage <= 100 &&
-          colorsStorage !== null &&
-          colorsStorage !== ""
-        ) {
-          const p = document.getElementsByClassName("item__content__addButton")[0];
-          p.insertAdjacentHTML("afterend", `${productInformation.name} a été ajouté au panier.`
-          );
-        }
-      };
-      /*SAVE KEYS AND VALUES OF THE LOCAL STORAGE
-       *Send products in the productInLocalStorage array then save in the localStorage
-       *Search if a product is already present
-       *If a product is already present only the quantity is updated
-       */
-      let productInLocalStorage = JSON.parse(localStorage.getItem("Canape"));
-      if (productInLocalStorage == null) {
-        productInLocalStorage = [];
-        productInLocalStorage.push(productOptions);
-        localStorage.setItem("Canape", JSON.stringify(productInLocalStorage));
-        popupConfirmation();
-      } else {
-        const duplicatedItems = productInLocalStorage.find(
-          (element) =>
-            element._id == productOptions._id &&
-            element.colors == productOptions.colors
-        );
-
-        if (duplicatedItems == undefined) {
-          productInLocalStorage.push(productOptions);
-          localStorage.setItem("Canape", JSON.stringify(productInLocalStorage));
-          popupConfirmation();
-        } else {
-          duplicatedItems.quantity += productOptions.quantity;
-          localStorage.setItem("Canape", JSON.stringify(productInLocalStorage));
-          popupConfirmation();
-        }
-      }
-    });
+    renderProduct(productInformation);
+    onClickButton(productInformation.name);
   })
   .catch((err) => {
     document
@@ -96,15 +16,101 @@ document.querySelector("#addToCart").addEventListener("click", function ()
       .insertAdjacentHTML("beforebegin", `Une erreur est survenue(${err})`);
   });
 
-let setErrors = (quantityStorage, colorsStorage) => {
+let setErrors = (quantity, color) => {
   //error message if quantity is missing
-  if (quantityStorage == 0 || quantityStorage > 100) {
+  if (quantity < 1 || quantity > 100) {
     alert("Please select a quantity between 1 and 100");
     return true;
   }
   //error message if color is missing
-  if (colorsStorage == null || colorsStorage === "") {
+  if (color == null || color === "") {
     alert("Please select a color");
     return true;
   }
+  return false;
 };
+
+function renderProduct(productInformation) {
+  //display image
+  document.querySelector(
+    ".item__img"
+  ).innerHTML = `<img src="${productInformation.imageUrl}" alt="${productInformation.altTxt}"> `;
+  //display name
+  document.getElementById("title").innerHTML = productInformation.name;
+  // display price
+  document.getElementById("price").innerHTML = productInformation.price;
+  //display description
+  document.getElementById("description").innerHTML =
+    productInformation.description;
+  //display Page's title
+  let title = document.querySelector("title");
+  title.innerText = productInformation.name;
+  //display colors
+  let optionColors = productInformation.colors;
+  optionColors.forEach((element) => {
+    let color = document.createElement("option");
+    color.value = element;
+    color.innerText = element;
+    document.getElementById("colors").appendChild(color);
+  });
+}
+
+function onClickButton(name) {
+  document
+    .querySelector("#addToCart")
+    .addEventListener("click", function () // Recovery of form datas onclick
+    {
+      let quantityStorage = parseInt(document.getElementById("quantity").value); // Get the selected quantity
+      let colorStorage = document.getElementById("colors").value; // Get the selected color
+
+      if (setErrors(quantityStorage, colorStorage)) {
+        return;
+      }
+
+      // Creating options of new product on local storage
+      let productOptions = {
+        _id: productId,
+        color: colorStorage,
+        quantity: quantityStorage,
+      };
+      addToCart(productOptions, name);
+    });
+}
+
+function addToCart(productOptions, name) {
+  /*SAVE KEYS AND VALUES OF THE LOCAL STORAGE
+   *Send products in the productInLocalStorage array then save in the localStorage
+   *Search if a product is already present
+   *If a product is already present only the quantity is updated
+   */
+  const productInLocalStorage = getCart();
+  const duplicatedItems = productInLocalStorage.find(
+    (element) =>
+      element._id == productOptions._id &&
+      element.color == productOptions.color
+  );
+  
+  if (duplicatedItems == undefined) {
+    productInLocalStorage.push(productOptions);
+  } else {
+    duplicatedItems.quantity += productOptions.quantity;
+  }
+  localStorage.setItem("Canape", JSON.stringify(productInLocalStorage));
+  setSuccessMessage(name);
+}
+function setSuccessMessage(name) {
+  const p = document.getElementsByClassName("item__content__addButton")[0];
+  p.insertAdjacentHTML(
+    "afterend",
+    `${name} a été ajouté au panier.`
+  );
+}
+
+function getCart() {
+  let cart = localStorage.getItem("Canape");
+  if (cart) {
+    return JSON.parse(cart);
+  } else {
+    return [];
+  }
+}
