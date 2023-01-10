@@ -17,16 +17,16 @@ if (cart === null || cart.length === 0) {
   document.getElementById("totalQuantity").innerHTML = totalQuantities;
 }
 
-function displayProduct(product, color, quantity) {
+function displayProduct(product, colors, quantity) {
   document.getElementById("cart__items").innerHTML += `
-       <article class="cart__item" data-id="${product._id}" data-color="${color}">
+       <article class="cart__item" data-id="${product._id}" data-color="${colors}">
                 <div class="cart__item__img">
                   <img src="${product.imageUrl}" alt="${product.altTxt}">
                 </div>
                 <div class="cart__item__content">
                   <div class="cart__item__content__description">
                     <h2>${product.name}</h2>
-                    <p>${color}</p>
+                    <p>${colors}</p>
                     <p>${product.price}</p>
                   </div>
                   <div class="cart__item__content__settings">
@@ -49,8 +49,7 @@ function fetchProductsInCart() {
     fetch("http://localhost:3000/api/products/" + element._id) // Get the informations of this products from the API
       .then((response) => response.json())
       .then((productInCart) => {
-        console.log(productInCart);
-        displayProduct(productInCart, element.colors, element.quantity);
+        displayProduct(productInCart, element.color, element.quantity);
         totalPrice += productInCart.price * element.quantity;
         document.getElementById("totalPrice").innerHTML = totalPrice;
       });
