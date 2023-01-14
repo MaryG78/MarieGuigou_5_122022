@@ -1,16 +1,15 @@
 const productInLocalStorage = getCart();
 console.log(productInLocalStorage);
+sort(); // Grouping of sofas by id in the cart display
 
-//Get datas
-
+//Get datas from the API
 function fetchProductsInCart() {
+  // Look at the product on the local Storage
   for (const element of productInLocalStorage) {
-    // Look at the product on the local Storage
     fetch("http://localhost:3000/api/products/" + element._id) // Get the informations of this products from the API
       .then((response) => response.json())
       .then((productInCart) => {
-        displayProduct(productInCart, element.color, element.quantity);
-        console.log(productInCart)
+        displayProduct(productInCart, element.color, element.quantity); // display of cart items
       })
 
       .catch((err) => {
@@ -25,11 +24,12 @@ function fetchProductsInCart() {
 if (productInLocalStorage === null || productInLocalStorage.length === 0) {
   document.getElementsByTagName("h1")[0].innerHTML = "Votre panier est vide";
 } else {
-  fetchProductsInCart();
-  getTotalQuantity();
-  getTotalPrice();
+  fetchProductsInCart(); // display of cart items
+  getTotalQuantity(); // Insert total quantity of product
+  getTotalPrice(); // Insert total price
 }
 
+// display of cart items
 function displayProduct(product, colors, quantity) {
   document.getElementById("cart__items").innerHTML += `
        <article class="cart__item" data-id="${product._id}" data-color="${colors}">
@@ -65,18 +65,16 @@ function getCart() {
   }
 }
 
+//total price
 function getTotalPrice() {
+  let totalPrice = 0;
   productInLocalStorage.forEach((e) => {
     fetch("http://localhost:3000/api/products/" + e._id)
       .then((response) => response.json())
       .then((datas) => {
         console.log(datas);
-        let totalPrice = 0;
-        for (let item in datas) {
-          console.log("ici" + e.quantity);
-          totalPrice += datas.price * e.quantity;
-          document.getElementById("totalPrice").innerHTML = totalPrice;
-        }
+        totalPrice += datas.price * e.quantity;
+        document.getElementById("totalPrice").innerHTML = totalPrice;
       });
   });
 }
@@ -90,43 +88,51 @@ function getTotalQuantity() {
   document.getElementById("totalQuantity").innerHTML = totalQuantities;
 }
 
-
-let clickedItem = document.querySelector(".cart__item");
-let clickedItemId = clickedItem.dataset
-console.log("mon id" + clickedItemId)
-
-// const searchItem = productInLocalStorage.find (
-//   (element) => element._id == clickedItem.dataset.id
-// );
-
-
-
-
+deleteItem();
 //delete items
-// function deleteItem() {
-//   document.querySelector(".deleteItem").addEventListener("click", () => {
-//     const itemToDelete = productInLocalStorage.find(
-//       (element) => element._id == dataset.id
-//     );
-//     return itemToDelete;
-//   });
-// }
-
-function changeQuantity() {
-  document
-    .querySelector("#itemQuantity")
-    .addEventListener("change", function () {
-      // Recovery of form datas onclick
-      const duplicatedItems = productInLocalStorage.find(
-        (element) => element._id == productInLocalStorage._id
+function deleteItem() {
+  let deleteButton = document
+    .querySelectorAll(".deleteItem")
+    .closest(".cart__item"); // select all the delete buttons
+  let clickedItem = deleteButton.closest(".cart__item"); // find the node parent of the delete button clicked
+  // let clickedItem = document.querySelector(".cart__item").parentElement.closest(deleteButton);
+  deleteButton.forEach((button) => {
+    addEventListener("click", () => {
+      let clickedItemId = clickedItem.dataset;
+      let itemToDelete = productInLocalStorage.find(
+        (element) => element._id == dataset.id && element.color == dataset.color
       );
-      if (duplicatedItems != undefined) {
-        duplicatedItems.quantity += productInLocalStorage.quantity;
-        if (duplicatedItems.quantity <= 0) {
-          deleteItem(duplicatedItems); // fonction de suppression
-        }
-      }
-      productInLocalStorage.push(duplicatedItems);
-      localStorage.setItem("Canape", JSON.stringify(productInLocalStorage));
+      console.log(itemToDelete);
     });
+  });
 }
+
+// Change quantity
+let quantityToChange = parseInt(
+  document.getElementsByClassName("itemQuantity").value
+);
+let itemQuantity = document.querySelector(".itemQuantity");
+itemQuantity.addEventListener("input", () =>
+  changeQuantity(productInLocalStorage._id, quantityToChange)
+);
+
+function changeQuantity(_id, quantityToChange, productInLocalStorage) {
+  newQuantity = productInLocalStorage.find(
+    (element) => element._id == productInLocalStorage._id
+  );
+  if (duplicatedItems != undefined) {
+    newQuantity.quantity = quantityToChange;
+  }
+  if (duplicatedItems.quantity <= 0) {
+    deleteItem(duplicatedItems); // fonction de suppression
+  }
+  localStorage.setItem("Canape", JSON.stringify(productInLocalStorage));
+  getTotalQuantity();
+  getTotalPrice();
+}
+
+//Grouping of sofas by id in the cart display
+function sort() {
+  productInLocalStorage.sort((a, b) => (a._id < b._id ? -1 : 1));
+}
+console.log(productInLocalStorage);
