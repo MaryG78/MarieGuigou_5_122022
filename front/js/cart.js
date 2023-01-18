@@ -95,8 +95,8 @@ function deleteItem() {
     button.addEventListener("click", () => {
       // find the product to delete
       let removeItem = button.closest(".cart__item");
-      let removeItemId = removeItem.dataset.id; 
-      let removeItemColor = removeItem.dataset.color; 
+      let removeItemId = removeItem.dataset.id;
+      let removeItemColor = removeItem.dataset.color;
       // select the product to delete
       let itemToDelete = newCart.find(
         (element) =>
@@ -105,7 +105,6 @@ function deleteItem() {
       if (itemToDelete) {
         //keep all the items of the cart exepted the clicked one
         newCart = newCart.filter((i) => i !== itemToDelete);
-        console.log(newCart);
         // save the new cart in local storage
         localStorage.setItem("Canape", JSON.stringify(newCart));
         removeItem.remove(); // remove the item to delete
@@ -124,33 +123,33 @@ function setEmptyCart() {
 }
 // Change quantity
 function changeQuantity() {
+  let newCart = getCart();
   //Get all ItemQuantity element and set for each of them
-  const itemQuantities = document.querySelectorAll(".itemQuantity");  
+  const itemQuantities = document.querySelectorAll(".itemQuantity");
 
   itemQuantities.forEach((itemQuantity) => {
     //listen to each of itemquanity
-    itemQuantity.addEventListener("change", (event) => {
-      event.preventDefault();
-      //find node that match :class cart__item
-      
+    itemQuantity.addEventListener("change", () => {
+      // find the product to modify
       let quantityToChange = itemQuantity.closest(".cart__item");
-      console.log(quantityToChange);
-
-      //Doublecheck if products found in cart and set id & color of modified product to the same one
-      const productFound = getCart().find(
-        (item) =>
-          item._id == quantityToChange.dataset.id &&
-          item.color == quantityToChange.dataset.color
+      let quantityToChangeId = quantityToChange.dataset.id;
+      let quantityToChangeColor = quantityToChange.dataset.color;
+      // Select the product to modify
+      let productToModify = newCart.find(
+        (element) =>
+          element._id == quantityToChangeId &&
+          element.color == quantityToChangeColor
       );
 
       // if it's found in cart, return new number of quantity to value
-      if (productFound) {
-        productFound.quantity = parseInt(itemQuantity.value);
+      if (productToModify) {
+        productToModify.quantity = parseInt(itemQuantity.value);
         //Add new info to local storage
-        localStorage.setItem("Canape", JSON.stringify(getCart()));
+        localStorage.setItem("Canape", JSON.stringify(newCart));
         //caculate new totalQuantity and new totalPrice
         getAndRenderTotalQuantity();
         getAndRenderTotalPrice();
+        setEmptyCart(); // message if the cart is empty
       }
     });
   });
