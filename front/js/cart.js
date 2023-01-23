@@ -1,39 +1,48 @@
-//Get datas from the API
-function fetchProductsInCart() {
-  // Look at the product on the local Storage
-  getSortedCart().forEach((productInCart) => {
-    fetch("http://localhost:3000/api/products/" + productInCart._id) // Get the informations of this products from the API
-      .then((response) => response.json())
-      .then((product) => {
-        displayProduct(product, productInCart.color, productInCart.quantity); // display of cart items
-        deleteItem();
-        changeQuantity();
-      })
 
-      .catch((err) => {
-        document
-          .querySelector("h1")
-          .insertAdjacentHTML("beforebegin", `Une erreur est survenue(${err})`);
-      });
+const productResponses = [];
+
+const fetchDatas = async () => {
+  // requete HTTP pour chaque produit du panier / promesse renvoyée dans un tableau
+  getSortedCart().forEach((productInCart) => {
+    productResponses.push(
+      fetch("http://localhost:3000/api/products/" + productInCart._id)
+    );
   });
+  const products = await Promise.all(productResponses); // creation d'une promesse avec en valeurs les produits du panier trié
+  const productResult = await Promise.all(products.map((r) => r.json())); // transformation des données en JSON
+  const cartProducts = getSortedCart();
+
+  cartProducts.forEach((productCart) => {
+    // pour chaque produit du panier trié
+    const product = productResult.find((p) => p._id == productCart._id); // recupère les produits JSOn identiques à ceux du panier
+    displayProduct(product, productCart.color, productCart.quantity); // display of cart items
+  });
+  deleteItem();
+  changeQuantity();
+};
+
+fetchDatas();
+renderMessageIfEmptyCart();
+getAndRenderTotalQuantity();
+getAndRenderTotalPrice();
+
+//Grouping sofas by id in the cart display
+function getSortedCart() {
+  let sortedCart = getCart().sort((a, b) => (a._id < b._id ? -1 : 1));
+  return sortedCart;
 }
 
-setEmptyCart(); //empty cart management
-fetchProductsInCart(); // display of cart items
-getAndRenderTotalQuantity(); // Insert total quantity of product
-getAndRenderTotalPrice(); // Insert total price
-
 // display of cart items
-function displayProduct(product, colors, quantity) {
+function displayProduct(product, color, quantity) {
   document.getElementById("cart__items").innerHTML += `
-       <article class="cart__item" data-id="${product._id}" data-color="${colors}">
+       <article class="cart__item" data-id="${product._id}" data-color="${color}">
                 <div class="cart__item__img">
                   <img src="${product.imageUrl}" alt="${product.altTxt}">
                 </div>
                 <div class="cart__item__content">
                   <div class="cart__item__content__description">
                     <h2>${product.name}</h2>
-                    <p>${colors}</p>
+                    <p>${color}</p>
                     <p>${product.price}</p>
                   </div>
                   <div class="cart__item__content__settings">
@@ -49,6 +58,99 @@ function displayProduct(product, colors, quantity) {
               </article>
           `;
 }
+
+function getAndRenderTotalPrice() {
+  let totalPrice = 0;
+  getCart().forEach((productInCart) => {
+    fetch("http://localhost:3000/api/products/" + productInCart._id)
+      .then((response) => response.json())
+      .then((product) => {
+        totalPrice += product.price * productInCart.quantity;
+        document.getElementById("totalPrice").innerHTML = totalPrice;
+      });
+  });
+}
+
+function getAndRenderTotalQuantity() {
+  const totalQuantities = getCart().reduce(
+    (total, product) => total + product.quantity,
+    0
+  );
+  document.getElementById("totalQuantity").innerHTML = totalQuantities;
+}
+
+//delete items
+function deleteItem() {
+  let cart = getCart();
+  const deleteButtons = document.querySelectorAll(".deleteItem"); // select all the delete button
+  deleteButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      // find the product to delete
+      let removeItem = button.closest(".cart__item");
+      let removeItemId = removeItem.dataset.id;
+      let removeItemColor = removeItem.dataset.color;
+      // select the product to delete
+      let itemToDelete = cart.find(
+        (element) =>
+          element._id == removeItemId && element.color == removeItemColor
+      );
+      if (itemToDelete) {
+        //keep all the items of the cart exepted the clicked one
+        newCart = cart.filter((i) => i !== itemToDelete);
+        
+        // save the new cart in local storage
+        localStorage.setItem("Canape", JSON.stringify(newCart));
+        removeItem.remove(); // remove the item to delete
+        renderMessageIfEmptyCart(); // message if the cart is empty
+        getAndRenderTotalQuantity(); // uptade and render new quantity
+        getAndRenderTotalPrice(); //uptade and render new total price
+        changeQuantity()
+      }
+    });
+  });
+}
+
+function changeQuantity() {
+  let cart = getCart();
+  //Get all ItemQuantity element and set for each of them
+  const itemQuantities = document.querySelectorAll(".itemQuantity");
+
+  itemQuantities.forEach((itemQuantity) => {
+    //listen to each of itemquanity
+    itemQuantity.addEventListener("change", () => {
+      // find the product to modify
+      let quantityToChange = itemQuantity.closest(".cart__item");
+      let itemId = quantityToChange.dataset.id;
+      let itemColor = quantityToChange.dataset.color;
+      // Select the product to modify
+      let productToModify = cart.find(
+        (element) => element._id == itemId && element.color == itemColor
+      );
+
+      // if it's found in cart, return new number of quantity to value
+      if (productToModify) {
+        productToModify.quantity = parseInt(itemQuantity.value);
+          //Add new info to local storage
+          localStorage.setItem("Canape", JSON.stringify(cart));
+          //caculate new totalQuantity and new totalPrice
+          getAndRenderTotalQuantity();
+          getAndRenderTotalPrice();
+          renderMessageIfEmptyCart(); // message if the cart is empty  
+      }
+    });
+  });
+}
+
+//if (productToModify.quantity >= 1 && productToModify.quantity <= 100)
+
+function renderMessageIfEmptyCart() {
+  if (getCart() === null || getCart().length === 0) {
+    document.getElementById(
+      "cartAndFormContainer"
+    ).innerHTML = `<h1> Votre panier est vide `;
+  }
+}
+
 // Cart recovery from the local storage
 function getCart() {
   let cart = localStorage.getItem("Canape");
@@ -59,98 +161,3 @@ function getCart() {
   }
 }
 
-//Grouping sofas by id in the cart display
-function getSortedCart() {
-  const sortedCart = getCart().sort((a, b) => (a._id < b._id ? -1 : 1));
-  return sortedCart;
-}
-
-//total price
-function getAndRenderTotalPrice() {
-  let totalPrice = 0;
-  getCart().forEach((product) => {
-    fetch("http://localhost:3000/api/products/" + product._id)
-      .then((response) => response.json())
-      .then((datas) => {
-        totalPrice += datas.price * product.quantity;
-        document.getElementById("totalPrice").innerHTML = totalPrice;
-      });
-  });
-}
-
-//total quantity
-function getAndRenderTotalQuantity() {
-  const totalQuantities = getCart().reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
-  document.getElementById("totalQuantity").innerHTML = totalQuantities;
-}
-
-//delete items
-function deleteItem() {
-  let newCart = getCart();
-  const deleteButtons = document.querySelectorAll(".deleteItem"); // select all the delete button
-  deleteButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      // find the product to delete
-      let removeItem = button.closest(".cart__item");
-      let removeItemId = removeItem.dataset.id;
-      let removeItemColor = removeItem.dataset.color;
-      // select the product to delete
-      let itemToDelete = newCart.find(
-        (element) =>
-          element._id == removeItemId && element.color == removeItemColor
-      );
-      if (itemToDelete) {
-        //keep all the items of the cart exepted the clicked one
-        newCart = newCart.filter((i) => i !== itemToDelete);
-        // save the new cart in local storage
-        localStorage.setItem("Canape", JSON.stringify(newCart));
-        removeItem.remove(); // remove the item to delete
-        setEmptyCart(); // message if the cart is empty
-        getAndRenderTotalQuantity(); // uptade and render new quantity
-        getAndRenderTotalPrice(); //uptade and render new total price
-      }
-    });
-  });
-}
-//message if the cart is empty
-function setEmptyCart() {
-  if (getCart() === null || getCart().length === 0) {
-    document.getElementsByTagName("h1")[0].innerHTML = "Votre panier est vide";
-  }
-}
-// Change quantity
-function changeQuantity() {
-  let newCart = getCart();
-  //Get all ItemQuantity element and set for each of them
-  const itemQuantities = document.querySelectorAll(".itemQuantity");
-
-  itemQuantities.forEach((itemQuantity) => {
-    //listen to each of itemquanity
-    itemQuantity.addEventListener("change", () => {
-      // find the product to modify
-      let quantityToChange = itemQuantity.closest(".cart__item");
-      let quantityToChangeId = quantityToChange.dataset.id;
-      let quantityToChangeColor = quantityToChange.dataset.color;
-      // Select the product to modify
-      let productToModify = newCart.find(
-        (element) =>
-          element._id == quantityToChangeId &&
-          element.color == quantityToChangeColor
-      );
-
-      // if it's found in cart, return new number of quantity to value
-      if (productToModify) {
-        productToModify.quantity = parseInt(itemQuantity.value);
-        //Add new info to local storage
-        localStorage.setItem("Canape", JSON.stringify(newCart));
-        //caculate new totalQuantity and new totalPrice
-        getAndRenderTotalQuantity();
-        getAndRenderTotalPrice();
-        setEmptyCart(); // message if the cart is empty
-      }
-    });
-  });
-}
