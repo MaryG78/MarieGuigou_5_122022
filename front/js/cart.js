@@ -1,4 +1,3 @@
-
 const productResponses = [];
 
 const fetchDatas = async () => {
@@ -97,14 +96,14 @@ function deleteItem() {
       if (itemToDelete) {
         //keep all the items of the cart exepted the clicked one
         newCart = cart.filter((i) => i !== itemToDelete);
-        
+
         // save the new cart in local storage
         localStorage.setItem("Canape", JSON.stringify(newCart));
         removeItem.remove(); // remove the item to delete
         renderMessageIfEmptyCart(); // message if the cart is empty
         getAndRenderTotalQuantity(); // uptade and render new quantity
         getAndRenderTotalPrice(); //uptade and render new total price
-        changeQuantity()
+        changeQuantity();
       }
     });
   });
@@ -130,12 +129,12 @@ function changeQuantity() {
       // if it's found in cart, return new number of quantity to value
       if (productToModify) {
         productToModify.quantity = parseInt(itemQuantity.value);
-          //Add new info to local storage
-          localStorage.setItem("Canape", JSON.stringify(cart));
-          //caculate new totalQuantity and new totalPrice
-          getAndRenderTotalQuantity();
-          getAndRenderTotalPrice();
-          renderMessageIfEmptyCart(); // message if the cart is empty  
+        //Add new info to local storage
+        localStorage.setItem("Canape", JSON.stringify(cart));
+        //caculate new totalQuantity and new totalPrice
+        getAndRenderTotalQuantity();
+        getAndRenderTotalPrice();
+        renderMessageIfEmptyCart(); // message if the cart is empty
       }
     });
   });
@@ -160,4 +159,47 @@ function getCart() {
     return [];
   }
 }
+ /********************** FORMULAIRE ***************************************************/
+submitForm();
 
+function submitForm() {  
+  const form = document.querySelector(".cart__order__form");
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    renderMessageIfEmptyCart();
+    const contact = createContactObject();
+    fetch(`http://localhost:3000/api/products/order`, {
+      method: "POST",
+      body: JSON.stringify(contact),
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => console.log(data));
+  });
+}
+
+function createContactObject() {
+  const form = document.querySelector(".cart__order__form");
+  const idsFromLocalStorage = getIdsFromLocalStorage()
+  const bodyContactObject = {
+    contact: {
+      firstName: form.firstName.value,
+      lastName: form.lastName.value,
+      address: form.address.value,
+      city: form.city.value,
+      email: form.email.value,
+    },
+    products: idsFromLocalStorage,
+  };
+  return bodyContactObject
+}
+function getIdsFromLocalStorage(){
+  let cart = getCart();
+  let productsIds = [];
+  cart.forEach((product) =>
+  {productsIds.push(product._id)})
+  return productsIds
+}
