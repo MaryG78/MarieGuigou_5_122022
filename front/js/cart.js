@@ -68,6 +68,7 @@ function getAndRenderTotalPrice() {
         document.getElementById("totalPrice").innerHTML = totalPrice;
       });
   });
+  deleteItem();
 }
 
 function getAndRenderTotalQuantity() {
@@ -76,6 +77,7 @@ function getAndRenderTotalQuantity() {
     0
   );
   document.getElementById("totalQuantity").innerHTML = totalQuantities;
+  deleteItem();
 }
 
 //delete items
@@ -159,32 +161,41 @@ function getCart() {
     return [];
   }
 }
- /********************** FORMULAIRE ***************************************************/
+/********************** FORM ***************************************************/
 submitForm();
 
-function submitForm() {  
+function submitForm() {
+  let cart = getCart();
   const form = document.querySelector(".cart__order__form");
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    renderMessageIfEmptyCart();
-    const contact = createContactObject();
-    fetch(`http://localhost:3000/api/products/order`, {
-      method: "POST",
-      body: JSON.stringify(contact),
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => console.log(data));
+    formControl();
+    const contactObject = createContactObject();
+    if (formControl() != true) {
+      fetch(`http://localhost:3000/api/products/order`, {
+        method: "POST",
+        body: JSON.stringify(contactObject),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      })
+        .then((res) => res.json())
+        .then((orderDatas) => {
+          console.log(orderDatas);
+          // localStorage.clear();
+          // window.location.href = `./confirmation.html?orderId=${orderDatas.orderId}`;
+        });
+    } else {
+      return;
+    }
   });
 }
-
+let bodyContactObject;
 function createContactObject() {
   const form = document.querySelector(".cart__order__form");
-  const idsFromLocalStorage = getIdsFromLocalStorage()
-  const bodyContactObject = {
+  const idsFromLocalStorage = getIdsFromLocalStorage();
+  bodyContactObject = {
     contact: {
       firstName: form.firstName.value,
       lastName: form.lastName.value,
@@ -194,12 +205,47 @@ function createContactObject() {
     },
     products: idsFromLocalStorage,
   };
-  return bodyContactObject
+  return bodyContactObject;
 }
-function getIdsFromLocalStorage(){
+
+function getIdsFromLocalStorage() {
   let cart = getCart();
   let productsIds = [];
-  cart.forEach((product) =>
-  {productsIds.push(product._id)})
-  return productsIds
+  cart.forEach((product) => {
+    productsIds.push(product._id);
+  });
+  return productsIds;
+}
+
+// Déclaration des regex
+const NamesAndCityRegex = /^[a-zA-ZÀ-ÿ'-\s\]{2,}\s[a-zA-Z'-]{2,}$/; //Any name with a length of 2 characters or more, including name with " - " or " ' " and a space between two names/ no numbers or others specials characters
+const adressRegex = /^[A-Za-zÀ-ÿ0-9'-\s]{2,50}$/; //all letters & numbers, characters " - " or " ' " and space. From 0-50 characters
+const emailRegex = /^[\w\.=-]+@[\w\.-]+\.[\w]{2,3}$/; //email adress in format contact@kanap.fr
+
+function formControl() {
+  const firstName = createContactObject().contact.firstName;
+  if (NamesAndCityRegex.test(firstName) != true) {
+    document.getElementById("firstNameErrorMsg").innerHTML =
+      "Veuillez saisir un prénom valide.";
+  }
+  const name = createContactObject().contact.lastName;
+  if (NamesAndCityRegex.test(name) != true) {
+    document.getElementById("lastNameErrorMsg").innerHTML =
+      "Veuillez saisir un nom valide.";
+  }
+  const adress = createContactObject().contact.adress;
+  if (adressRegex.test(adress) != true) {
+    document.getElementById("addressErrorMsg").innerHTML =
+      "Veuillez saisir une adresse valide";
+  }
+  const city = createContactObject().contact.city;
+  if (NamesAndCityRegex.test(city) != true) {
+    document.getElementById("cityErrorMsg").innerHTML =
+      "Veuillez saisir un nom de ville valide";
+  }
+  const email = createContactObject().contact.email;
+  if (emailRegex.test(email) != true) {
+    document.getElementById("emailErrorMsg").innerHTML =
+      "Veuillez saisir une adresse email de type exemple@kanap.fr";
+  }
 }
