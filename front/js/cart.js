@@ -1,19 +1,19 @@
-const productResponses = [];
+const getApiProducts = [];
 
 const fetchDatas = async () => {
   // requete HTTP pour chaque produit du panier / promesse renvoyée dans un tableau
   getSortedCart().forEach((productInCart) => {
-    productResponses.push(
+    getApiProducts.push(
       fetch("http://localhost:3000/api/products/" + productInCart._id)
     );
   });
-  const products = await Promise.all(productResponses); // creation d'une promesse avec en valeurs les produits du panier trié
-  const productResult = await Promise.all(products.map((r) => r.json())); // transformation des données en JSON
-  const cartProducts = getSortedCart();
+  const apiProducts = await Promise.all(getApiProducts); // creation d'une promesse avec en valeurs les produits du panier trié
+  const apiProductResult = await Promise.all(apiProducts.map((r) => r.json())); // transformation des données en JSON
 
+  const cartProducts = getSortedCart();
   cartProducts.forEach((productCart) => {
     // pour chaque produit du panier trié
-    const product = productResult.find((p) => p._id == productCart._id); // recupère les produits JSOn identiques à ceux du panier
+    const product = apiProductResult.find((p) => p._id == productCart._id); // recupère les produits JSOn identiques à ceux du panier
     displayProduct(product, productCart.color, productCart.quantity); // display of cart items
   });
   deleteItem();
@@ -127,20 +127,28 @@ function changeQuantity() {
       let productToModify = cart.find(
         (element) => element._id == itemId && element.color == itemColor
       );
+      //let lastQuantity = productToModify.quantity;
+    
 
       // if it's found in cart, return new number of quantity to value
       if (productToModify) {
         productToModify.quantity = parseInt(itemQuantity.value);
-        //Add new info to local storage
-        localStorage.setItem("Canape", JSON.stringify(cart));
-        //caculate new totalQuantity and new totalPrice
-        getAndRenderTotalQuantity();
-        getAndRenderTotalPrice();
-        renderMessageIfEmptyCart(); // message if the cart is empty
+        if (productToModify.quantity <= 0 || productToModify.quantity <= 100) {
+          //Add new info to local storage
+          localStorage.setItem("Canape", JSON.stringify(cart));
+          //caculate new totalQuantity and new totalPrice
+          getAndRenderTotalQuantity();
+          getAndRenderTotalPrice();
+          renderMessageIfEmptyCart(); // message if the cart is empty
+        } else {
+          alert("Veuillez entrer une quantité comprise entre 1 et 100");
+          window.location.href = window.location.href;
+        }
       }
     });
   });
 }
+//(itemQuantity.value >= 0 || itemQuantity.value <= 100)
 
 //if (productToModify.quantity >= 1 && productToModify.quantity <= 100)
 
@@ -161,6 +169,7 @@ function getCart() {
     return [];
   }
 }
+
 /********************** FORM ***************************************************/
 submitForm();
 

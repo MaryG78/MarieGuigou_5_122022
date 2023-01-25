@@ -96,11 +96,18 @@ function addToCart(productOptions, name) {
   }
   localStorage.setItem("Canape", JSON.stringify(productInLocalStorage));
   setSuccessMessage(name);
+
+  
 }
 function setSuccessMessage(name) {
-  const p = document.getElementsByClassName("item__content__addButton")[0];
-  p.insertAdjacentHTML("afterend", `${name} a été ajouté au panier.`);
+  let p = document.getElementsByClassName("item__content__addButton")[0];
+  p.insertAdjacentHTML("afterend",`<div> ${name} a été ajouté au panier.</div>`);
+  
+  //document.querySelector(".item__content").lastChild.style.backgroundColor = "red"
 }
+
+
+
 
 function getCart() {
   let cart = localStorage.getItem("Canape");
