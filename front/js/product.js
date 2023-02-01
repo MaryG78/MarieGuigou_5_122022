@@ -8,27 +8,13 @@ fetch(`http://localhost:3000/api/products/${productId}`)
   .then((response) => response.json())
   .then((productInformation) => {
     renderProduct(productInformation);
-    onClickButton(productInformation.name);
+    onClickAddToCart(productInformation.name);
   })
   .catch((err) => {
     document
       .getElementById("items")
       .insertAdjacentHTML("beforebegin", `Une erreur est survenue(${err})`);
   });
-
-let setErrors = (quantity, color) => {
-  //error message if quantity is missing
-  if (quantity < 1 || quantity > 100) {
-    alert("Please select a quantity between 1 and 100");
-    return true;
-  }
-  //error message if color is missing
-  if (color == null || color === "") {
-    alert("Please select a color");
-    return true;
-  }
-  return false;
-};
 
 function renderProduct(productInformation) {
   //display image
@@ -55,7 +41,7 @@ function renderProduct(productInformation) {
   });
 }
 
-function onClickButton(name) {
+function onClickAddToCart(name) {
   document
     .querySelector("#addToCart")
     .addEventListener("click", function () // Recovery of form datas onclick
@@ -77,6 +63,25 @@ function onClickButton(name) {
     });
 }
 
+let setErrors = (quantity, color) => {
+  //error message if quantity & color is missing
+  if ((quantity < 1 || quantity > 100) && (color === null || color === "")) {
+    alert("Please select a color and a quantity");
+    return true;
+  }
+  //error message if quantity is missing
+  if (quantity < 1 || quantity > 100) {
+    alert("Please select a quantity between 1 and 100");
+    return true;
+  }
+  //error message if color is missing
+  if (color == null || color === "") {
+    alert("Please select a color");
+    return true;
+  }
+  return false;
+};
+
 function addToCart(productOptions, name) {
   /*SAVE KEYS AND VALUES OF THE LOCAL STORAGE
    *Send products in the productInLocalStorage array then save in the localStorage
@@ -96,18 +101,19 @@ function addToCart(productOptions, name) {
   }
   localStorage.setItem("Canape", JSON.stringify(productInLocalStorage));
   setSuccessMessage(name);
-
-  
 }
 function setSuccessMessage(name) {
-  let p = document.getElementsByClassName("item__content__addButton")[0];
-  p.insertAdjacentHTML("afterend",`<div> ${name} a été ajouté au panier.</div>`);
-  
-  //document.querySelector(".item__content").lastChild.style.backgroundColor = "red"
+  let successMessage = document.getElementById("success_message");
+  console.log(successMessage);
+
+  if (successMessage === null) {
+    let p = document.getElementsByClassName("item__content__addButton")[0];
+    p.insertAdjacentHTML(
+      "afterend",
+      `<div id = "success_message"> <p> ${name} a été ajouté au panier. Cliquez <a href = "./cart.html"> ici </a> pour accéder au panier</p></div>`
+    );
+  }
 }
-
-
-
 
 function getCart() {
   let cart = localStorage.getItem("Canape");

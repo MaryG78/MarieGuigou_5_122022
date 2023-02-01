@@ -1,29 +1,28 @@
-const getApiProducts = [];
+async function fetchProductsInCart() {
+  const sortedCart = await getSortedCart();
+  for (const productInCart of sortedCart) {
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/products/" + productInCart._id
+      );
+      const product = await response.json();
+      displayProduct(product, productInCart.color, productInCart.quantity);
+      deleteItem();
+      changeQuantity();
+    } catch (err) {
+      document
+        .querySelector("h1")
+        .insertAdjacentHTML("beforebegin", `Une erreur est survenue(${err})`);
+    }
+  }
+    deleteItem();
+    changeQuantity();
+}
 
-const fetchDatas = async () => {
-  // requete HTTP pour chaque produit du panier / promesse renvoyée dans un tableau
-  getSortedCart().forEach((productInCart) => {
-    getApiProducts.push(
-      fetch("http://localhost:3000/api/products/" + productInCart._id)
-    );
-  });
-  const apiProducts = await Promise.all(getApiProducts); // creation d'une promesse avec en valeurs les produits du panier trié
-  const apiProductResult = await Promise.all(apiProducts.map((r) => r.json())); // transformation des données en JSON
-
-  const cartProducts = getSortedCart();
-  cartProducts.forEach((productCart) => {
-    // pour chaque produit du panier trié
-    const product = apiProductResult.find((p) => p._id == productCart._id); // recupère les produits JSOn identiques à ceux du panier
-    displayProduct(product, productCart.color, productCart.quantity); // display of cart items
-  });
-  deleteItem();
-  changeQuantity();
-};
-
-fetchDatas();
 renderMessageIfEmptyCart();
 getAndRenderTotalQuantity();
 getAndRenderTotalPrice();
+fetchProductsInCart();
 
 //Grouping sofas by id in the cart display
 function getSortedCart() {
@@ -69,6 +68,7 @@ function getAndRenderTotalPrice() {
       });
   });
   deleteItem();
+  changeQuantity();
 }
 
 function getAndRenderTotalQuantity() {
@@ -78,6 +78,7 @@ function getAndRenderTotalQuantity() {
   );
   document.getElementById("totalQuantity").innerHTML = totalQuantities;
   deleteItem();
+  changeQuantity;
 }
 
 //delete items
@@ -105,7 +106,6 @@ function deleteItem() {
         renderMessageIfEmptyCart(); // message if the cart is empty
         getAndRenderTotalQuantity(); // uptade and render new quantity
         getAndRenderTotalPrice(); //uptade and render new total price
-        changeQuantity();
       }
     });
   });
@@ -120,15 +120,14 @@ function changeQuantity() {
     //listen to each of itemquanity
     itemQuantity.addEventListener("change", () => {
       // find the product to modify
-      let quantityToChange = itemQuantity.closest(".cart__item");
-      let itemId = quantityToChange.dataset.id;
-      let itemColor = quantityToChange.dataset.color;
+      let itemToChange = itemQuantity.closest(".cart__item");
+      let itemId = itemToChange.dataset.id;
+      let itemColor = itemToChange.dataset.color;
       // Select the product to modify
       let productToModify = cart.find(
         (element) => element._id == itemId && element.color == itemColor
       );
-      //let lastQuantity = productToModify.quantity;
-    
+      let lastQuantity = productToModify.quantity;
 
       // if it's found in cart, return new number of quantity to value
       if (productToModify) {
@@ -142,15 +141,12 @@ function changeQuantity() {
           renderMessageIfEmptyCart(); // message if the cart is empty
         } else {
           alert("Veuillez entrer une quantité comprise entre 1 et 100");
-          window.location.href = window.location.href;
+          itemQuantity.value = lastQuantity;
         }
       }
     });
   });
 }
-//(itemQuantity.value >= 0 || itemQuantity.value <= 100)
-
-//if (productToModify.quantity >= 1 && productToModify.quantity <= 100)
 
 function renderMessageIfEmptyCart() {
   if (getCart() === null || getCart().length === 0) {
@@ -174,13 +170,12 @@ function getCart() {
 submitForm();
 
 function submitForm() {
-  let cart = getCart();
   const form = document.querySelector(".cart__order__form");
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    formControl();
     const contactObject = createContactObject();
-    if (formControl() != true) {
+    let isValid = formControl(contactObject);
+    if (isValid) {
       fetch(`http://localhost:3000/api/products/order`, {
         method: "POST",
         body: JSON.stringify(contactObject),
@@ -191,9 +186,16 @@ function submitForm() {
       })
         .then((res) => res.json())
         .then((orderDatas) => {
-          console.log(orderDatas);
-          // localStorage.clear();
-          // window.location.href = `./confirmation.html?orderId=${orderDatas.orderId}`;
+          localStorage.clear();
+          window.location.href = `../html/confirmation.html?orderId=${orderDatas.orderId}`;
+        })
+        .catch((err) => {
+          document
+            .getElementById("cart__items")
+            .insertAdjacentHTML(
+              "beforebegin",
+              `Une erreur est survenue(${err})`
+            );
         });
     } else {
       return;
@@ -227,34 +229,46 @@ function getIdsFromLocalStorage() {
 }
 
 // Déclaration des regex
-const NamesAndCityRegex = /^[a-zA-ZÀ-ÿ'-\s\]{2,}\s[a-zA-Z'-]{2,}$/; //Any name with a length of 2 characters or more, including name with " - " or " ' " and a space between two names/ no numbers or others specials characters
-const adressRegex = /^[A-Za-zÀ-ÿ0-9'-\s]{2,50}$/; //all letters & numbers, characters " - " or " ' " and space. From 0-50 characters
+const namesRegex = /^[a-zA-ZÀ-ÿ'\-\s]{1,}$/; // Any name with a length of 1 characters or more, including name with " - " or " ' " and a space between two names/ no numbers or others specials characters
+const cityRegex = /^[a-zA-ZÀ-ÿ'\-\s]*$/; // any single or compound word with letters, characters " - " or " ' " and space.
+const addressRegex = /^[A-Za-zÀ-ÿ0-9'\-\s]{6,}$/; //all letters & numbers, characters " - " or " ' " and space. Not less than 6 characters
 const emailRegex = /^[\w\.=-]+@[\w\.-]+\.[\w]{2,3}$/; //email adress in format contact@kanap.fr
 
 function formControl() {
   const firstName = createContactObject().contact.firstName;
-  if (NamesAndCityRegex.test(firstName) != true) {
-    document.getElementById("firstNameErrorMsg").innerHTML =
-      "Veuillez saisir un prénom valide.";
+  if (namesRegex.test(firstName) != true) {
+    document.getElementById(
+      "firstNameErrorMsg"
+    ).innerHTML = `Le champ saisie ne doit contenir que des lettres et les caractères spéciaux "'" et "-".`;
+    return false;
   }
   const name = createContactObject().contact.lastName;
-  if (NamesAndCityRegex.test(name) != true) {
-    document.getElementById("lastNameErrorMsg").innerHTML =
-      "Veuillez saisir un nom valide.";
+  if (namesRegex.test(name) != true) {
+    document.getElementById(
+      "lastNameErrorMsg"
+    ).innerHTML = `Le champ saisie ne doit contenir que des lettres et les caractères spéciaux "'" et "-".`;
+    return false;
   }
-  const adress = createContactObject().contact.adress;
-  if (adressRegex.test(adress) != true) {
+  const address = createContactObject().contact.address;
+  if (addressRegex.test(address) != true) {
     document.getElementById("addressErrorMsg").innerHTML =
-      "Veuillez saisir une adresse valide";
+      "Le champ saisie ne doit contenir que des chiffres et des lettres et au moins 6 caractères";
+    return false;
   }
   const city = createContactObject().contact.city;
-  if (NamesAndCityRegex.test(city) != true) {
-    document.getElementById("cityErrorMsg").innerHTML =
-      "Veuillez saisir un nom de ville valide";
+  if (cityRegex.test(city) != true) {
+    document.getElementById(
+      "cityErrorMsg"
+    ).innerHTML = `Le champ saisie ne doit contenir que des lettres et les caractères spéciaux "'" et "-".`;
+    return false;
   }
   const email = createContactObject().contact.email;
   if (emailRegex.test(email) != true) {
     document.getElementById("emailErrorMsg").innerHTML =
       "Veuillez saisir une adresse email de type exemple@kanap.fr";
+    return false;
   }
+  return true;
 }
+
+

@@ -1,11 +1,8 @@
 // API's request
 fetch("http://localhost:3000/api/products")
-  // If the request is successfull, returning the response in a JSON format
   .then((res) => res.json())
-  // defining API's response as datas and sending action tu be executed
   .then((datas) => {
-
-    // Get API's datas
+    // insertion of products in the home page
     let display = "";
     datas.forEach((article) => {
       display += `
