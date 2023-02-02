@@ -1,3 +1,4 @@
+// Get the products' ID from the page URL
 function getOrderId() {
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
@@ -5,4 +6,5 @@ function getOrderId() {
   return orderId;
 }
 
-document.querySelector("#orderId").innerHTML = getOrderId(); // order number display
+// display order number on the confirmation message
+document.querySelector("#orderId").innerHTML = getOrderId();

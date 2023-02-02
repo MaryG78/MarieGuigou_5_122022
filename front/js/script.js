@@ -1,8 +1,12 @@
-// API's request
+/* API's request to get the products informations
+ ** If the request is successfull => returning a response in JSON format
+ ** defining API's response as "datas"
+ ** Incrementing product informations in HTML code
+ ** display products
+ */
 fetch("http://localhost:3000/api/products")
   .then((res) => res.json())
   .then((datas) => {
-    // insertion of products in the home page
     let display = "";
     datas.forEach((article) => {
       display += `
@@ -18,6 +22,7 @@ fetch("http://localhost:3000/api/products")
     document.getElementById("items").innerHTML = display;
   })
 
+  // If the request fails => returning a response in JSON format
   .catch((err) => {
     document.getElementById(
       "items"

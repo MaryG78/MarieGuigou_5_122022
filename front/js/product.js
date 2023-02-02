@@ -1,9 +1,13 @@
-// Get the products' ID
+// Get the products' ID from the page URL
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 const productId = urlParams.get("id");
 
-// Get the products' datas
+/* Get the product informations from the product ID with a fetch method
+ ** Display the product informations with the renderProduct function
+ ** Creation of the new product options in local storage and addition in the cart with the function onClickAddToCart
+ ** If an error occurs, diplay an error message.
+ */
 fetch(`http://localhost:3000/api/products/${productId}`)
   .then((response) => response.json())
   .then((productInformation) => {
@@ -41,6 +45,10 @@ function renderProduct(productInformation) {
   });
 }
 
+/*Get the datas of the selected product when clicking on the "Add to cart" button.
+ ** If no errors, creation of the new product options in local storage
+ ** add the product to cart
+ */
 function onClickAddToCart(name) {
   document
     .querySelector("#addToCart")
@@ -53,7 +61,6 @@ function onClickAddToCart(name) {
         return;
       }
 
-      // Creating options of new product on local storage
       let productOptions = {
         _id: productId,
         color: colorStorage,
@@ -63,7 +70,7 @@ function onClickAddToCart(name) {
     });
 }
 
-let setErrors = (quantity, color) => {
+function setErrors(quantity, color) {
   //error message if quantity & color is missing
   if ((quantity < 1 || quantity > 100) && (color === null || color === "")) {
     alert("Please select a color and a quantity");
@@ -80,14 +87,13 @@ let setErrors = (quantity, color) => {
     return true;
   }
   return false;
-};
+}
 
+/* Search if the product exists
+ ** if a product exists update his quantity
+ ** else add a new item to the local storage.
+ */
 function addToCart(productOptions, name) {
-  /*SAVE KEYS AND VALUES OF THE LOCAL STORAGE
-   *Send products in the productInLocalStorage array then save in the localStorage
-   *Search if a product is already present
-   *If a product is already present only the quantity is updated
-   */
   const productInLocalStorage = getCart();
   const duplicatedItems = productInLocalStorage.find(
     (element) =>
@@ -102,9 +108,10 @@ function addToCart(productOptions, name) {
   localStorage.setItem("Canape", JSON.stringify(productInLocalStorage));
   setSuccessMessage(name);
 }
+
+// display a success message when adding a product to the cart and provide a link to the cart page.
 function setSuccessMessage(name) {
   let successMessage = document.getElementById("success_message");
-  console.log(successMessage);
 
   if (successMessage === null) {
     let p = document.getElementsByClassName("item__content__addButton")[0];
@@ -115,6 +122,7 @@ function setSuccessMessage(name) {
   }
 }
 
+// Get items from local storage or an empty array
 function getCart() {
   let cart = localStorage.getItem("Canape");
   if (cart) {

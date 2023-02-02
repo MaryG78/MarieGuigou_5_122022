@@ -1,3 +1,8 @@
+/* get the products in the sorted cart
+ ** get products informations from the API
+ ** Display the product informations with the displayProduct function
+ ** allow the user to change quantities or delete a product with the function deletItem and changeQuantity
+ */
 async function fetchProductsInCart() {
   const sortedCart = await getSortedCart();
   for (const productInCart of sortedCart) {
@@ -7,16 +12,14 @@ async function fetchProductsInCart() {
       );
       const product = await response.json();
       displayProduct(product, productInCart.color, productInCart.quantity);
-      deleteItem();
-      changeQuantity();
     } catch (err) {
       document
         .querySelector("h1")
         .insertAdjacentHTML("beforebegin", `Une erreur est survenue(${err})`);
     }
   }
-    deleteItem();
-    changeQuantity();
+  deleteItem();
+  changeQuantity();
 }
 
 renderMessageIfEmptyCart();
@@ -57,6 +60,10 @@ function displayProduct(product, color, quantity) {
           `;
 }
 
+/* Get the products from cart
+ ** get products informations from the API
+ ** calculation of the total price and return it in the HTML element.
+ */
 function getAndRenderTotalPrice() {
   let totalPrice = 0;
   getCart().forEach((productInCart) => {
@@ -71,6 +78,10 @@ function getAndRenderTotalPrice() {
   changeQuantity();
 }
 
+/* Get the products from cart
+ ** calculation of the total quantity by adding the quantity of each product
+ ** return it in the HTML element
+ */
 function getAndRenderTotalQuantity() {
   const totalQuantities = getCart().reduce(
     (total, product) => total + product.quantity,
@@ -81,64 +92,65 @@ function getAndRenderTotalQuantity() {
   changeQuantity;
 }
 
-//delete items
+/* Get the products from cart
+ ** select and listen the delete buttons
+ ** On click, find the product to be deleted with its id nd its color
+ ** delete it from the local storage and the cart page
+ ** save the new cart in the local storage
+ ** update prices and quantities in the cart page
+ */
 function deleteItem() {
   let cart = getCart();
-  const deleteButtons = document.querySelectorAll(".deleteItem"); // select all the delete button
+  const deleteButtons = document.querySelectorAll(".deleteItem");
   deleteButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      // find the product to delete
       let removeItem = button.closest(".cart__item");
       let removeItemId = removeItem.dataset.id;
       let removeItemColor = removeItem.dataset.color;
-      // select the product to delete
       let itemToDelete = cart.find(
         (element) =>
           element._id == removeItemId && element.color == removeItemColor
       );
       if (itemToDelete) {
-        //keep all the items of the cart exepted the clicked one
         newCart = cart.filter((i) => i !== itemToDelete);
 
-        // save the new cart in local storage
         localStorage.setItem("Canape", JSON.stringify(newCart));
-        removeItem.remove(); // remove the item to delete
-        renderMessageIfEmptyCart(); // message if the cart is empty
-        getAndRenderTotalQuantity(); // uptade and render new quantity
-        getAndRenderTotalPrice(); //uptade and render new total price
+        removeItem.remove();
+        renderMessageIfEmptyCart();
+        getAndRenderTotalQuantity();
+        getAndRenderTotalPrice();
       }
     });
   });
 }
 
+/* Get the products from cart
+ ** get all itemQuantity elements and for each of them listen the change of quantity
+ ** find the product to be modified with its id nd its color
+ ** convert the new quantity value into an integer and add add it to the local storage
+ ** //caculate new totalQuantity and new totalPrice
+ */
 function changeQuantity() {
   let cart = getCart();
-  //Get all ItemQuantity element and set for each of them
   const itemQuantities = document.querySelectorAll(".itemQuantity");
 
   itemQuantities.forEach((itemQuantity) => {
-    //listen to each of itemquanity
     itemQuantity.addEventListener("change", () => {
-      // find the product to modify
       let itemToChange = itemQuantity.closest(".cart__item");
       let itemId = itemToChange.dataset.id;
       let itemColor = itemToChange.dataset.color;
-      // Select the product to modify
       let productToModify = cart.find(
         (element) => element._id == itemId && element.color == itemColor
       );
       let lastQuantity = productToModify.quantity;
 
-      // if it's found in cart, return new number of quantity to value
       if (productToModify) {
         productToModify.quantity = parseInt(itemQuantity.value);
         if (productToModify.quantity <= 0 || productToModify.quantity <= 100) {
-          //Add new info to local storage
           localStorage.setItem("Canape", JSON.stringify(cart));
-          //caculate new totalQuantity and new totalPrice
           getAndRenderTotalQuantity();
           getAndRenderTotalPrice();
-          renderMessageIfEmptyCart(); // message if the cart is empty
+          renderMessageIfEmptyCart();
         } else {
           alert("Veuillez entrer une quantité comprise entre 1 et 100");
           itemQuantity.value = lastQuantity;
@@ -148,6 +160,7 @@ function changeQuantity() {
   });
 }
 
+// Display a message if the cart is empty
 function renderMessageIfEmptyCart() {
   if (getCart() === null || getCart().length === 0) {
     document.getElementById(
@@ -156,7 +169,7 @@ function renderMessageIfEmptyCart() {
   }
 }
 
-// Cart recovery from the local storage
+// Get items from local storage or an empty array
 function getCart() {
   let cart = localStorage.getItem("Canape");
   if (cart) {
@@ -167,8 +180,93 @@ function getCart() {
 }
 
 /********************** FORM ***************************************************/
-submitForm();
+/* Get data form to be tested (first name, last name, address, city, email)
+ ** if the data doesn't match the regex, display an error message
+ ** else return true
+ */
+function formControl() {
+  const firstName = createContactObject().contact.firstName;
+  if (namesRegex.test(firstName) != true) {
+    document.getElementById(
+      "firstNameErrorMsg"
+    ).innerHTML = `Le champ saisie ne doit contenir que des lettres et les caractères spéciaux ' et -.`;
+    return false;
+  }
+  const name = createContactObject().contact.lastName;
+  if (namesRegex.test(name) != true) {
+    document.getElementById(
+      "lastNameErrorMsg"
+    ).innerHTML = `Le champ saisie ne doit contenir que des lettres et les caractères spéciaux ' et -.`;
+    return false;
+  }
+  const address = createContactObject().contact.address;
+  if (addressRegex.test(address) != true) {
+    document.getElementById("addressErrorMsg").innerHTML =
+      "Le champ saisie ne doit contenir que des chiffres et des lettres et au moins 6 caractères";
+    return false;
+  }
+  const city = createContactObject().contact.city;
+  if (cityRegex.test(city) != true) {
+    document.getElementById(
+      "cityErrorMsg"
+    ).innerHTML = `Le champ saisie ne doit contenir que des lettres et les caractères spéciaux ' et -.`;
+    return false;
+  }
+  const email = createContactObject().contact.email;
+  if (emailRegex.test(email) != true) {
+    document.getElementById("emailErrorMsg").innerHTML =
+      "Veuillez saisir une adresse email de type exemple@kanap.fr";
+    return false;
+  }
+  return true;
+}
 
+// Regex declaration
+const namesRegex = /^[a-zA-ZÀ-ÿ'\-\s]{1,}$/; // Any name with a length of 1 characters or more, including name with " - " or " ' " and a space between two names/ no numbers or others specials characters
+const cityRegex = /^[a-zA-ZÀ-ÿ'\-\s]*$/; // any single or compound word with letters, characters " - " or " ' " and space.
+const addressRegex = /^[A-Za-zÀ-ÿ0-9'\-\s]{6,}$/; //all letters & numbers, characters " - " or " ' " and space. Not less than 6 characters
+const emailRegex = /^[\w\.=-]+@[\w\.-]+\.[\w]{2,3}$/; //email adress in format contact@kanap.fr
+
+/* Get cart
+ ** create an empty array
+ ** browse each product in the cart and add its ID to the array
+ */
+function getIdsFromLocalStorage() {
+  let cart = getCart();
+  let productsIds = [];
+  cart.forEach((product) => {
+    productsIds.push(product._id);
+  });
+  return productsIds;
+}
+
+/* Get the form element
+ ** get the products ids from the local storage
+ ** create a contact object with the form datas
+ ** create products with the products ids
+ */
+function createContactObject() {
+  const form = document.querySelector(".cart__order__form");
+  const idsFromLocalStorage = getIdsFromLocalStorage();
+  let bodyContactObject = {
+    contact: {
+      firstName: form.firstName.value,
+      lastName: form.lastName.value,
+      address: form.address.value,
+      city: form.city.value,
+      email: form.email.value,
+    },
+    products: idsFromLocalStorage,
+  };
+  return bodyContactObject;
+}
+
+/* Get the form element and listen the submit event
+ ** get the contact object (with user datas) and check the validity of its datas
+ ** if the datas are valids, send a post request with the contact object elements
+ ** clear the local storage
+ ** display a confirmation message
+ */
 function submitForm() {
   const form = document.querySelector(".cart__order__form");
   form.addEventListener("submit", (event) => {
@@ -202,73 +300,4 @@ function submitForm() {
     }
   });
 }
-let bodyContactObject;
-function createContactObject() {
-  const form = document.querySelector(".cart__order__form");
-  const idsFromLocalStorage = getIdsFromLocalStorage();
-  bodyContactObject = {
-    contact: {
-      firstName: form.firstName.value,
-      lastName: form.lastName.value,
-      address: form.address.value,
-      city: form.city.value,
-      email: form.email.value,
-    },
-    products: idsFromLocalStorage,
-  };
-  return bodyContactObject;
-}
-
-function getIdsFromLocalStorage() {
-  let cart = getCart();
-  let productsIds = [];
-  cart.forEach((product) => {
-    productsIds.push(product._id);
-  });
-  return productsIds;
-}
-
-// Déclaration des regex
-const namesRegex = /^[a-zA-ZÀ-ÿ'\-\s]{1,}$/; // Any name with a length of 1 characters or more, including name with " - " or " ' " and a space between two names/ no numbers or others specials characters
-const cityRegex = /^[a-zA-ZÀ-ÿ'\-\s]*$/; // any single or compound word with letters, characters " - " or " ' " and space.
-const addressRegex = /^[A-Za-zÀ-ÿ0-9'\-\s]{6,}$/; //all letters & numbers, characters " - " or " ' " and space. Not less than 6 characters
-const emailRegex = /^[\w\.=-]+@[\w\.-]+\.[\w]{2,3}$/; //email adress in format contact@kanap.fr
-
-function formControl() {
-  const firstName = createContactObject().contact.firstName;
-  if (namesRegex.test(firstName) != true) {
-    document.getElementById(
-      "firstNameErrorMsg"
-    ).innerHTML = `Le champ saisie ne doit contenir que des lettres et les caractères spéciaux "'" et "-".`;
-    return false;
-  }
-  const name = createContactObject().contact.lastName;
-  if (namesRegex.test(name) != true) {
-    document.getElementById(
-      "lastNameErrorMsg"
-    ).innerHTML = `Le champ saisie ne doit contenir que des lettres et les caractères spéciaux "'" et "-".`;
-    return false;
-  }
-  const address = createContactObject().contact.address;
-  if (addressRegex.test(address) != true) {
-    document.getElementById("addressErrorMsg").innerHTML =
-      "Le champ saisie ne doit contenir que des chiffres et des lettres et au moins 6 caractères";
-    return false;
-  }
-  const city = createContactObject().contact.city;
-  if (cityRegex.test(city) != true) {
-    document.getElementById(
-      "cityErrorMsg"
-    ).innerHTML = `Le champ saisie ne doit contenir que des lettres et les caractères spéciaux "'" et "-".`;
-    return false;
-  }
-  const email = createContactObject().contact.email;
-  if (emailRegex.test(email) != true) {
-    document.getElementById("emailErrorMsg").innerHTML =
-      "Veuillez saisir une adresse email de type exemple@kanap.fr";
-    return false;
-  }
-  return true;
-}
-
-
+submitForm();
